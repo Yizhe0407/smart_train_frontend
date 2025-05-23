@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Calendar } from "@/components/ui/calendar"
@@ -60,10 +59,8 @@ export default function BookingPage() {
   const [time, setTime] = useState<string>("12:00")
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [searchResults, setSearchResults] = useState<any[] | null>(null)
-  const [searchResults, setSearchResults] = useState<any[] | null>(null)
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean
-    train: any | null
     train: any | null
   }>({
     open: false,
@@ -256,7 +253,7 @@ export default function BookingPage() {
                         onSelect={setDate}
                         disabled={(day) => {
                           const today = new Date()
-                          return date < today
+                          return date ? date < today : true
                         }}
                         initialFocus
                       />
