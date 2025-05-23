@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: "/:path*",
+        source: "/api/:path*",
         destination: `${process.env.BACKEND_API}/:path*`, // Proxy to Backend
       }
     ]
