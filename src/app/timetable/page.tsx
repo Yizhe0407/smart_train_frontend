@@ -95,7 +95,6 @@ export default function TimetablePage() {
 
     // 模擬API請求
     setTimeout(() => {
-      setTimetable(mockTimetable)
       setIsLoading(false)
     }, 1000)
   }
