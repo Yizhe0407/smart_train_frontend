@@ -21,8 +21,8 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
       </head>
       <body className={cn("min-h-screen bg-background font-sans antialiased", fontSans.variable)}>
-        <main className="pb-16">{children}</main>
-        <BottomNavigation />
+          <main className="pb-16">{children}</main>
+          <BottomNavigation />
       </body>
     </html>
   )

@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Loader2 } from "lucide-react"
@@ -95,13 +95,13 @@ export default function MyBookingsPage() {
     switch (status) {
       case "已確認":
         return (
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+          <Badge variant="outline" className="bg-blue-100 text-blue-600 border-blue-200">
             已確認
           </Badge>
         )
       case "待生效":
         return (
-          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+          <Badge variant="outline" className="bg-blue-200 text-blue-600 border-blue-300">
             待生效
           </Badge>
         )
@@ -136,21 +136,38 @@ export default function MyBookingsPage() {
         <CardContent>
           <Tabs defaultValue="upcoming" onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="upcoming">進行中/未來</TabsTrigger>
-              <TabsTrigger value="completed">已完成</TabsTrigger>
-              <TabsTrigger value="cancelled">已取消</TabsTrigger>
+              <TabsTrigger
+                value="upcoming"
+                className="data-[state=active]:bg-blue-100 data-[state=active]:text-blue-600"
+              >
+                進行中/未來
+              </TabsTrigger>
+              <TabsTrigger
+                value="completed"
+                className="data-[state=active]:bg-blue-100 data-[state=active]:text-blue-600"
+              >
+                已完成
+              </TabsTrigger>
+              <TabsTrigger
+                value="cancelled"
+                className="data-[state=active]:bg-blue-100 data-[state=active]:text-blue-600"
+              >
+                已取消
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="upcoming" className="mt-4">
               {mockBookings.upcoming.length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-muted-foreground mb-4">您目前沒有任何進行中的預約</p>
-                  <Button onClick={() => router.push("/")}>前往預約</Button>
+                  <Button onClick={() => router.push("/")} className="bg-blue-600 hover:bg-blue-500">
+                    前往預約
+                  </Button>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {mockBookings.upcoming.map((booking) => (
-                    <Card key={booking.id}>
+                    <Card key={booking.id} className="border-blue-100">
                       <CardContent className="p-4">
                         <div className="flex justify-between items-start mb-2">
                           <div className="font-medium text-lg">{booking.station}</div>

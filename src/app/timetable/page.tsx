@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -11,8 +11,51 @@ import { zhTW } from "date-fns/locale"
 import { Badge } from "@/components/ui/badge"
 import { CalendarIcon, Loader2 } from "lucide-react"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { counties, stationsByCounty } from "@/lib/locationData"
 
+// 模擬資料
+const counties = [
+  "基隆市",
+  "台北市",
+  "新北市",
+  "桃園市",
+  "新竹市",
+  "新竹縣",
+  "苗栗縣",
+  "台中市",
+  "彰化縣",
+  "南投縣",
+  "雲林縣",
+  "嘉義市",
+  "嘉義縣",
+  "台南市",
+  "高雄市",
+  "屏東縣",
+  "宜蘭縣",
+  "花蓮縣",
+  "台東縣",
+]
+
+const stationsByCounty: Record<string, Array<{ name: string; isSmall: boolean }>> = {
+  基隆市: [
+    { name: "基隆", isSmall: false },
+    { name: "三坑", isSmall: true },
+    { name: "八堵", isSmall: false },
+    { name: "七堵", isSmall: false },
+  ],
+  台北市: [
+    { name: "南港", isSmall: false },
+    { name: "松山", isSmall: false },
+    { name: "台北", isSmall: false },
+    { name: "萬華", isSmall: false },
+  ],
+  新北市: [
+    { name: "板橋", isSmall: false },
+    { name: "樹林", isSmall: false },
+    { name: "鶯歌", isSmall: false },
+    { name: "福隆", isSmall: true },
+  ],
+  // 其他縣市的車站...
+}
 
 // 模擬時刻表資料
 const mockTimetable = [
@@ -79,15 +122,17 @@ const mockTimetable = [
 ]
 
 export default function TimetablePage() {
-  const [county, setCounty] = useState<string>("")
-  const [station, setStation] = useState<string>("")
+  const [originCounty, setOriginCounty] = useState<string>("")
+  const [originStation, setOriginStation] = useState<string>("")
+  const [destCounty, setDestCounty] = useState<string>("")
+  const [destStation, setDestStation] = useState<string>("")
   const [date, setDate] = useState<Date | undefined>(new Date())
   const [direction, setDirection] = useState<string>("all")
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [timetable, setTimetable] = useState<any[] | null>(null)
 
   const handleSearch = () => {
-    if (!county || !station) {
+    if (!originCounty || !originStation || !destCounty || !destStation) {
       return
     }
 
@@ -105,37 +150,95 @@ export default function TimetablePage() {
       <h1 className="text-2xl font-bold mb-6">時刻表查詢</h1>
 
       <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">縣市</label>
-          <Select value={county} onValueChange={setCounty}>
-            <SelectTrigger>
-              <SelectValue placeholder="請選擇縣市" />
-            </SelectTrigger>
-            <SelectContent>
-              {counties.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <div className="space-y-4">
+          <Card className="mb-8">
+            <CardHeader className="text-md font-medium">起站</CardHeader>
+            <CardContent className="space-y-2 flex flex-row content-center items-center gap-4">
+              <div className="basis-1/2">
+                <label className="block text-sm font-medium mb-1">縣市</label>
+                <Select
+                  value={originCounty}
+                  onValueChange={(value) => {
+                    setOriginCounty(value)
+                    setOriginStation("")
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="請選擇縣市" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {counties.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="basis-1/2">
+                <label className="block text-sm font-medium mb-1">車站</label>
+                <Select value={originStation} onValueChange={setOriginStation} disabled={!originCounty}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="請選擇車站" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {originCounty &&
+                      stationsByCounty[originCounty]?.map((s) => (
+                        <SelectItem key={s.name} value={s.name}>
+                          {s.name} {s.isSmall && <span className="text-xs text-blue-400">(小站)</span>}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
 
-        <div>
-          <label className="block text-sm font-medium mb-1">車站</label>
-          <Select value={station} onValueChange={setStation} disabled={!county}>
-            <SelectTrigger>
-              <SelectValue placeholder="請選擇車站" />
-            </SelectTrigger>
-            <SelectContent>
-              {county &&
-                stationsByCounty[county]?.map((s) => (
-                  <SelectItem key={s.name} value={s.name}>
-                    {s.name} {s.isSmall && <span className="text-xs text-muted-foreground">(小站)</span>}
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
+            <div className="px-6">
+              <hr />
+            </div>
+
+            <CardHeader className="text-md font-medium">迄站</CardHeader>
+            <CardContent className="space-y-2 flex flex-row content-center items-center gap-4">
+              <div className="basis-1/2">
+                <label className="block text-sm font-medium mb-1">縣市</label>
+                <Select
+                  value={destCounty}
+                  onValueChange={(value) => {
+                    setDestCounty(value)
+                    setDestStation("")
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="請選擇縣市" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {counties.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="basis-1/2">
+                <label className="block text-sm font-medium mb-1">車站</label>
+                <Select value={destStation} onValueChange={setDestStation} disabled={!destCounty}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="請選擇車站" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {destCounty &&
+                      stationsByCounty[destCounty]?.map((s) => (
+                        <SelectItem key={s.name} value={s.name}>
+                          {s.name} {s.isSmall && <span className="text-xs text-blue-400">(小站)</span>}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <div>
@@ -152,14 +255,11 @@ export default function TimetablePage() {
                 mode="single"
                 selected={date}
                 onSelect={setDate}
-                locale={zhTW} // <--- 在這裡加入 locale 屬性
                 disabled={(date) => {
                   const today = new Date()
-                  const sevenDaysAgo = new Date()
                   const thirtyDaysLater = new Date()
-                  sevenDaysAgo.setDate(today.getDate() - 7)
                   thirtyDaysLater.setDate(today.getDate() + 30)
-                  return date < sevenDaysAgo || date > thirtyDaysLater
+                  return date < today || date > thirtyDaysLater
                 }}
               />
             </PopoverContent>
@@ -169,19 +269,23 @@ export default function TimetablePage() {
         <div>
           <label className="block text-sm font-medium mb-1">行駛方向</label>
           <ToggleGroup type="single" value={direction} onValueChange={(value) => value && setDirection(value)}>
-            <ToggleGroupItem value="all" className="flex-1">
+            <ToggleGroupItem value="all" className="flex-1 data-[state=on]:bg-blue-100 data-[state=on]:text-blue-600">
               全部
             </ToggleGroupItem>
-            <ToggleGroupItem value="north" className="flex-1">
+            <ToggleGroupItem value="north" className="flex-1 data-[state=on]:bg-blue-100 data-[state=on]:text-blue-600">
               北上/順行
             </ToggleGroupItem>
-            <ToggleGroupItem value="south" className="flex-1">
+            <ToggleGroupItem value="south" className="flex-1 data-[state=on]:bg-blue-100 data-[state=on]:text-blue-600">
               南下/逆行
             </ToggleGroupItem>
           </ToggleGroup>
         </div>
 
-        <Button className="w-full" onClick={handleSearch} disabled={!county || !station || isLoading}>
+        <Button
+          className="w-full bg-blue-600 hover:bg-blue-500"
+          onClick={handleSearch}
+          disabled={!originCounty || !originStation || !destCounty || !destStation || isLoading}
+        >
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -196,12 +300,20 @@ export default function TimetablePage() {
       {timetable && (
         <div className="mt-8">
           <h2 className="text-lg font-semibold mb-4">時刻表</h2>
+          <div className="text-sm mb-4">
+            <p>
+              <span className="font-medium">起站:</span> {originStation}
+            </p>
+            <p>
+              <span className="font-medium">迄站:</span> {destStation}
+            </p>
+          </div>
           {timetable.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">查無列車時刻資訊</p>
           ) : (
             <div className="space-y-3">
               {timetable.map((train) => (
-                <Card key={train.trainNumber} className={train.canBook ? "border-green-200" : ""}>
+                <Card key={train.trainNumber} className={train.canBook ? "border-blue-200" : ""}>
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start mb-2">
                       <div>
@@ -210,7 +322,7 @@ export default function TimetablePage() {
                       </div>
                       <div>
                         {train.status === "準點" ? (
-                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                          <Badge variant="outline" className="bg-blue-100 text-blue-600 border-blue-200">
                             準點
                           </Badge>
                         ) : (
@@ -238,7 +350,7 @@ export default function TimetablePage() {
                       </div>
                       {train.canBook && (
                         <div className="mt-2">
-                          <Badge className="bg-green-100 text-green-800 hover:bg-green-200 border-none">
+                          <Badge className="bg-blue-100 text-blue-600 hover:bg-blue-200 border-none">
                             本站可預約停靠
                           </Badge>
                         </div>

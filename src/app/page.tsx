@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Calendar } from "@/components/ui/calendar"
@@ -20,10 +20,52 @@ import {
 } from "@/components/ui/dialog"
 import { useRouter } from "next/navigation"
 
-// 從 lib 匯入資料
-import { counties, stationsByCounty, StationInfo } from "@/lib/locationData" // 假設你的 tsconfig.json 有設定 @/ 指向 src/
+// 模擬資料
+const counties = [
+  "基隆市",
+  "台北市",
+  "新北市",
+  "桃園市",
+  "新竹市",
+  "新竹縣",
+  "苗栗縣",
+  "台中市",
+  "彰化縣",
+  "南投縣",
+  "雲林縣",
+  "嘉義市",
+  "嘉義縣",
+  "台南市",
+  "高雄市",
+  "屏東縣",
+  "宜蘭縣",
+  "花蓮縣",
+  "台東縣",
+]
 
-// 模擬班次資料 (這個可以保留在組件內，或者如果需要在其他地方使用，也可以移到 lib)
+const stationsByCounty: Record<string, Array<{ name: string; isSmall: boolean }>> = {
+  基隆市: [
+    { name: "基隆", isSmall: false },
+    { name: "三坑", isSmall: true },
+    { name: "八堵", isSmall: false },
+    { name: "七堵", isSmall: false },
+  ],
+  台北市: [
+    { name: "南港", isSmall: false },
+    { name: "松山", isSmall: false },
+    { name: "台北", isSmall: false },
+    { name: "萬華", isSmall: false },
+  ],
+  新北市: [
+    { name: "板橋", isSmall: false },
+    { name: "樹林", isSmall: false },
+    { name: "鶯歌", isSmall: false },
+    { name: "福隆", isSmall: true },
+  ],
+  // 其他縣市的車站...
+}
+
+// 模擬班次資料
 const mockTrains = [
   {
     trainNumber: "1254",
@@ -55,10 +97,10 @@ export default function BookingPage() {
   const [date, setDate] = useState<Date | undefined>(new Date())
   const [time, setTime] = useState<string>("12:00")
   const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [searchResults, setSearchResults] = useState<any[] | null>(null) // 可以考慮為 train 定義更精確的型別
+  const [searchResults, setSearchResults] = useState<any[] | null>(null)
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean
-    train: any | null // 同上
+    train: any | null
   }>({
     open: false,
     train: null,
@@ -105,9 +147,6 @@ export default function BookingPage() {
     }
   }
 
-  // 獲取選定縣市的車站列表，如果縣市未選或資料中不存在，則返回空陣列
-  const currentStations: StationInfo[] = county && stationsByCounty[county] ? stationsByCounty[county] : []
-
   return (
     <div className="container max-w-md mx-auto p-4">
       <Card className="mb-6">
@@ -116,10 +155,13 @@ export default function BookingPage() {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-1">縣市</label>
-              <Select value={county} onValueChange={(value) => {
-                setCounty(value)
-                setStation("") // 當縣市改變時，重置車站選擇
-              }}>
+              <Select
+                value={county}
+                onValueChange={(value) => {
+                  setCounty(value)
+                  setStation("")
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="請選擇縣市" />
                 </SelectTrigger>
@@ -135,14 +177,15 @@ export default function BookingPage() {
 
             <div>
               <label className="block text-sm font-medium mb-1">車站</label>
-              <Select value={station} onValueChange={setStation} disabled={!county || currentStations.length === 0}>
+              <Select value={station} onValueChange={setStation} disabled={!county}>
                 <SelectTrigger>
-                  <SelectValue placeholder={!county ? "請先選擇縣市" : "請選擇車站"} />
+                  <SelectValue placeholder="請選擇車站" />
                 </SelectTrigger>
                 <SelectContent>
-                  {currentStations.map((s) => (
+                  {county &&
+                    stationsByCounty[county]?.map((s) => (
                       <SelectItem key={s.name} value={s.name}>
-                        {s.name} {s.isSmall && <span className="text-xs text-muted-foreground">(小站)</span>}
+                        {s.name} {s.isSmall && <span className="text-xs text-blue-400">(小站)</span>}
                       </SelectItem>
                     ))}
                 </SelectContent>
@@ -185,12 +228,7 @@ export default function BookingPage() {
                         onSelect={setDate}
                         disabled={(date) => {
                           const today = new Date()
-                          // 將今天的時間設為 00:00:00 以便比較
-                          today.setHours(0,0,0,0)
-                          const thirtyDaysLater = new Date()
-                          thirtyDaysLater.setDate(new Date().getDate() + 30)
-                          thirtyDaysLater.setHours(23,59,59,999) // 將30天後的日期時間設為當天結束
-                          return date < today || date > thirtyDaysLater
+                          return date < today
                         }}
                       />
                     </PopoverContent>
@@ -215,7 +253,11 @@ export default function BookingPage() {
               </div>
             )}
 
-            <Button className="w-full" onClick={handleSearch} disabled={!county || !station || isLoading}>
+            <Button
+              className="w-full bg-blue-600 hover:bg-blue-500"
+              onClick={handleSearch}
+              disabled={!county || !station || isLoading}
+            >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -232,32 +274,35 @@ export default function BookingPage() {
         <CardContent>
           <div className="mt-8">
             <h2 className="text-lg font-semibold mb-4">可預約班次</h2>
-            {
-              searchResults === null ? (
-                <p className="text-center text-muted-foreground py-8">等待查詢...</p>
-              ) : searchResults.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">抱歉，該時段查無符合條件的可預約班次</p>
-              ) : (
-                <div className="space-y-3">
-                  {searchResults.map((train) => (
-                    <Card key={train.trainNumber}>
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <div className="font-medium">{train.trainNumber} 次列車</div>
-                            <div className="text-sm text-muted-foreground">預計抵達時間: {train.arrivalTime}</div>
-                            <div className="text-sm text-muted-foreground">終點站: {train.destination}</div>
-                          </div>
-                          <Button variant="outline" size="sm" onClick={() => handleBookTrain(train)}>
-                            預約此班次
-                          </Button>
+            {searchResults === null || searchResults === undefined ? ( // 檢查 searchResults 是否為 null 或 undefined
+              <p className="text-center text-muted-foreground py-8">尚未查詢</p>
+            ) : searchResults.length === 0 ? ( // 如果 searchResults 已定義，再檢查其長度
+              <p className="text-center text-muted-foreground py-8">抱歉，該時段查無符合條件的可預約班次</p>
+            ) : (
+              <div className="space-y-3">
+                {searchResults.map((train) => (
+                  <Card key={train.trainNumber} className="border-blue-100">
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <div className="font-medium">{train.trainNumber} 次列車</div>
+                          <div className="text-sm text-muted-foreground">預計抵達時間: {train.arrivalTime}</div>
+                          <div className="text-sm text-muted-foreground">終點站: {train.destination}</div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )
-            }
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleBookTrain(train)}
+                          className="border-blue-300 text-blue-600 hover:bg-blue-50"
+                        >
+                          預約此班次
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
 
           <Dialog
@@ -285,7 +330,7 @@ export default function BookingPage() {
                     <strong>終點站:</strong> {confirmDialog.train.destination}
                   </p>
                   <p>
-                    <strong>停靠車站:</strong> {station} ({county})
+                    <strong>停靠車站:</strong> {station}
                   </p>
                 </div>
               )}
@@ -293,7 +338,7 @@ export default function BookingPage() {
                 <Button variant="outline" onClick={() => setConfirmDialog({ open: false, train: null })}>
                   取消
                 </Button>
-                <Button onClick={confirmBooking} disabled={isLoading}>
+                <Button onClick={confirmBooking} disabled={isLoading} className="bg-blue-600 hover:bg-blue-500">
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
