@@ -51,9 +51,11 @@ const mockTrains = [
 
 export default function BookingPage() {
   const router = useRouter()
+  const [originCounty, setOriginCounty] = useState<string>("")
+  const [originStation, setOriginStation] = useState<string>("")
+  const [destCounty, setDestCounty] = useState<string>("")
+  const [destStation, setDestStation] = useState<string>("")
   const [userId, setUserId] = useState<string>("")
-  const [county, setCounty] = useState<string>("")
-  const [station, setStation] = useState<string>("")
   const [bookNow, setBookNow] = useState<boolean>(true)
   const [date, setDate] = useState<Date | undefined>(new Date())
   const [time, setTime] = useState<string>("12:00")
@@ -109,10 +111,10 @@ export default function BookingPage() {
   // });
 
   const handleSearch = () => {
-    if (!county || !station) {
-      toast.error("請先選擇縣市和車站");
-      return
-    }
+    // if (!county || !station) {
+    //   toast.error("請先選擇縣市和車站");
+    //   return
+    // }
 
     setIsLoading(true)
     setSearchResults(null); // 開始查詢前先清空舊結果
@@ -161,51 +163,100 @@ export default function BookingPage() {
     }
   }
 
-  const currentStations: StationInfo[] = county && stationsByCounty[county] ? stationsByCounty[county] : []
-
   return (
     <div className="container max-w-md mx-auto p-4">
       <Card className="mb-6">
         <CardHeader className="text-2xl font-bold text-center">預約停靠服務</CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">縣市</label>
-              <Select
-                value={county}
-                onValueChange={(value) => {
-                  setCounty(value)
-                  setStation("")
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="請選擇縣市" />
-                </SelectTrigger>
-                <SelectContent>
-                  {counties.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-1">車站</label>
-              <Select value={station} onValueChange={setStation} disabled={!county}>
-                <SelectTrigger>
-                  <SelectValue placeholder="請選擇車站" />
-                </SelectTrigger>
-                <SelectContent>
-                  {county &&
-                    stationsByCounty[county]?.map((s) => (
-                      <SelectItem key={s.name} value={s.name}>
-                        {s.name} {s.isSmall && <span className="text-xs text-blue-400">(小站)</span>}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
+            <div className="mb-8">
+              <h3 className="text-md font-medium">起站</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">縣市</label>
+                  <Select
+                    value={originCounty}
+                    onValueChange={(value) => {
+                      setOriginCounty(value)
+                      setOriginStation("")
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="請選擇縣市" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {counties.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">車站</label>
+                  <Select value={originStation} onValueChange={setOriginStation} disabled={!originCounty}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="請選擇車站" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {originCounty &&
+                        stationsByCounty[originCounty]?.map((s) => (
+                          <SelectItem key={s.name} value={s.name}>
+                            {s.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="px-6">
+                <hr />
+              </div>
+
+              <h3 className="text-md font-medium">迄站</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">縣市</label>
+                  <Select
+                    value={destCounty}
+                    onValueChange={(value) => {
+                      setDestCounty(value)
+                      setDestStation("")
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="請選擇縣市" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {counties.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">車站</label>
+                  <Select value={destStation} onValueChange={setDestStation} disabled={!destCounty}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="請選擇車站" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {destCounty &&
+                        stationsByCounty[destCounty]?.map((s) => (
+                          <SelectItem key={s.name} value={s.name}>
+                            {s.name} {s.isSmall && <span className="text-xs text-blue-400">(小站)</span>}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
 
             <div className="flex items-center space-x-2 pt-2">
@@ -280,7 +331,7 @@ export default function BookingPage() {
             <Button
               className="w-full bg-blue-600 hover:bg-blue-500"
               onClick={handleSearch}
-              disabled={!county || !station || isLoading}
+              disabled={!originCounty || !originStation || !destCounty || !destStation || isLoading}
             >
               {isLoading ? (
                 <>
@@ -354,7 +405,7 @@ export default function BookingPage() {
                     <strong>終點站:</strong> {confirmDialog.train.destination}
                   </p>
                   <p>
-                    <strong>停靠車站:</strong> {station}
+                    <strong>停靠車站:</strong> {originStation}
                   </p>
                 </div>
               )}
