@@ -10,7 +10,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { format } from "date-fns"
 import { zhTW } from "date-fns/locale"
-import { CalendarIcon, Loader2 } from "lucide-react"
+import { CalendarIcon, Loader2, Train, Clock, MapPin, Locate, X } from "lucide-react"
 import {
   Dialog,
   DialogContent,

@@ -11,51 +11,8 @@ import { zhTW } from "date-fns/locale"
 import { Badge } from "@/components/ui/badge"
 import { CalendarIcon, Loader2 } from "lucide-react"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { counties, stationsByCounty, StationInfo } from "@/lib/locationData"
 
-// 模擬資料
-const counties = [
-  "基隆市",
-  "台北市",
-  "新北市",
-  "桃園市",
-  "新竹市",
-  "新竹縣",
-  "苗栗縣",
-  "台中市",
-  "彰化縣",
-  "南投縣",
-  "雲林縣",
-  "嘉義市",
-  "嘉義縣",
-  "台南市",
-  "高雄市",
-  "屏東縣",
-  "宜蘭縣",
-  "花蓮縣",
-  "台東縣",
-]
-
-const stationsByCounty: Record<string, Array<{ name: string; isSmall: boolean }>> = {
-  基隆市: [
-    { name: "基隆", isSmall: false },
-    { name: "三坑", isSmall: true },
-    { name: "八堵", isSmall: false },
-    { name: "七堵", isSmall: false },
-  ],
-  台北市: [
-    { name: "南港", isSmall: false },
-    { name: "松山", isSmall: false },
-    { name: "台北", isSmall: false },
-    { name: "萬華", isSmall: false },
-  ],
-  新北市: [
-    { name: "板橋", isSmall: false },
-    { name: "樹林", isSmall: false },
-    { name: "鶯歌", isSmall: false },
-    { name: "福隆", isSmall: true },
-  ],
-  // 其他縣市的車站...
-}
 
 // 模擬時刻表資料
 const mockTimetable = [
@@ -152,9 +109,9 @@ export default function TimetablePage() {
         <CardContent>
           <div className="space-y-4">
             <div className="space-y-4">
-              <Card className="mb-8">
-                <CardHeader className="text-md font-medium">起站</CardHeader>
-                <CardContent className="grid grid-cols-2 gap-4">
+              <div className="mb-8">
+                <h3 className="text-md font-medium">起站</h3>
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">縣市</label>
                     <Select
@@ -186,21 +143,21 @@ export default function TimetablePage() {
                         {originCounty &&
                           stationsByCounty[originCounty]?.map((s) => (
                             <SelectItem key={s.name} value={s.name}>
-                              {s.name} {s.isSmall && <span className="text-xs text-blue-400">(小站)</span>}
+                              {s.name}
                             </SelectItem>
                           ))}
                       </SelectContent>
                     </Select>
                   </div>
-                </CardContent>
+                </div>
 
-                <div className="px-6">
+                <div className="py-6">
                   <hr />
                 </div>
 
-                <CardHeader className="text-md font-medium">迄站</CardHeader>
-                <CardContent className="grid grid-cols-2 gap-4">
-                  <div className="basis-1/2">
+                <h3 className="text-md font-medium">迄站</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
                     <label className="block text-sm font-medium mb-1">縣市</label>
                     <Select
                       value={destCounty}
@@ -222,7 +179,7 @@ export default function TimetablePage() {
                     </Select>
                   </div>
 
-                  <div className="basis-1/2">
+                  <div>
                     <label className="block text-sm font-medium mb-1">車站</label>
                     <Select value={destStation} onValueChange={setDestStation} disabled={!destCounty}>
                       <SelectTrigger>
@@ -232,14 +189,14 @@ export default function TimetablePage() {
                         {destCounty &&
                           stationsByCounty[destCounty]?.map((s) => (
                             <SelectItem key={s.name} value={s.name}>
-                              {s.name} {s.isSmall && <span className="text-xs text-blue-400">(小站)</span>}
+                              {s.name}
                             </SelectItem>
                           ))}
                       </SelectContent>
                     </Select>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </div>
 
             <div>
