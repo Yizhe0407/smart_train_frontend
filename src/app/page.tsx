@@ -212,7 +212,7 @@ export default function BookingPage() {
                 </div>
               </div>
 
-              <div className="px-6">
+              <div className="p-6">
                 <hr />
               </div>
 
@@ -250,7 +250,7 @@ export default function BookingPage() {
                       {destCounty &&
                         stationsByCounty[destCounty]?.map((s) => (
                           <SelectItem key={s.name} value={s.name}>
-                            {s.name} {s.isSmall && <span className="text-xs text-blue-400">(小站)</span>}
+                            {s.name}
                           </SelectItem>
                         ))}
                     </SelectContent>
