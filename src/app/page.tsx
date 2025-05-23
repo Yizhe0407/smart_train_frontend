@@ -10,7 +10,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { format } from "date-fns"
 import { zhTW } from "date-fns/locale"
-import { CalendarIcon, Loader2 } from "lucide-react"
+import { CalendarIcon, Loader2, Train, Clock, MapPin, Locate, X } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -21,8 +21,6 @@ import {
 } from "@/components/ui/dialog"
 import { useRouter } from "next/navigation"
 import liff from "@line/liff";
-
-// 從 lib 匯入資料
 import { counties, stationsByCounty, StationInfo } from "@/lib/locationData" // 假設你的 tsconfig.json 有設定 @/ 指向 src/
 
 // 模擬班次資料
@@ -212,7 +210,7 @@ export default function BookingPage() {
                 </div>
               </div>
 
-              <div className="p-6">
+              <div className="py-6">
                 <hr />
               </div>
 
@@ -388,42 +386,71 @@ export default function BookingPage() {
               }
             }}
           >
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>確認預約</DialogTitle>
-                <DialogDescription>您確定要預約以下班次停靠嗎？</DialogDescription>
-              </DialogHeader>
-              {confirmDialog.train && (
-                <div className="py-4">
-                  <p>
-                    <strong>車次:</strong> {confirmDialog.train.trainNumber}
-                  </p>
-                  <p>
-                    <strong>預計抵達時間:</strong> {confirmDialog.train.arrivalTime}
-                  </p>
-                  <p>
-                    <strong>終點站:</strong> {confirmDialog.train.destination}
-                  </p>
-                  <p>
-                    <strong>停靠車站:</strong> {originStation}
-                  </p>
-                </div>
-              )}
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setConfirmDialog({ open: false, train: null })}>
-                  取消
-                </Button>
-                <Button onClick={confirmBooking} disabled={isLoading} className="bg-blue-600 hover:bg-blue-500">
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      處理中...
-                    </>
-                  ) : (
-                    "確認預約"
-                  )}
-                </Button>
-              </DialogFooter>
+            <DialogContent className="max-w-md rounded-xl p-0 overflow-hidden">
+              <div className="p-6">
+                <DialogHeader className="mb-4">
+                  <div className="flex items-center justify-between">
+                    <DialogTitle className="text-2xl font-bold text-gray-800">確認預約</DialogTitle>
+                  </div>
+                  <DialogDescription className="text-gray-600 mt-1">
+                    您確定要預約以下班次停靠嗎？
+                  </DialogDescription>
+                </DialogHeader>
+
+                {confirmDialog.train && (
+                  <div className="bg-blue-50 rounded-lg p-4 my-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="col-span-2 flex items-center mb-1">
+                        <Train className="h-5 w-5 text-blue-600 mr-2" />
+                        <span className="font-semibold text-gray-700">車次:</span>
+                        <span className="ml-2 text-gray-900 font-bold">{confirmDialog.train.trainNumber}</span>
+                      </div>
+
+                      <div className="flex items-center">
+                        <Clock className="h-5 w-5 text-blue-600 mr-2" />
+                        <span className="font-semibold text-gray-700">預計抵達:</span>
+                        <span className="ml-2 text-gray-900">{confirmDialog.train.arrivalTime}</span>
+                      </div>
+
+                      <div className="flex items-center">
+                        <MapPin className="h-5 w-5 text-blue-600 mr-2" />
+                        <span className="font-semibold text-gray-700">終點站:</span>
+                        <span className="ml-2 text-gray-900">{confirmDialog.train.destination}</span>
+                      </div>
+
+                      <div className="col-span-2 flex items-center">
+                        <Locate className="h-5 w-5 text-blue-600 mr-2" />
+                        <span className="font-semibold text-gray-700">停靠車站:</span>
+                        <span className="ml-2 text-gray-900">{originStation}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <DialogFooter className="flex gap-3 mt-6 pt-4 border-t border-gray-100">
+                  <Button
+                    variant="outline"
+                    onClick={() => setConfirmDialog({ open: false, train: null })}
+                    className="flex-1 border-gray-300 hover:bg-gray-50 text-gray-700"
+                  >
+                    取消
+                  </Button>
+                  <Button
+                    onClick={confirmBooking}
+                    disabled={isLoading}
+                    className="flex-1 bg-blue-600 text-white shadow-md"
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center justify-center">
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        處理中...
+                      </div>
+                    ) : (
+                      "確認預約"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </div>
             </DialogContent>
           </Dialog>
         </CardContent>
