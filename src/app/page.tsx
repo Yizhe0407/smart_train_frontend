@@ -73,30 +73,28 @@ export default function BookingPage() {
       liffId: process.env.NEXT_PUBLIC_LIFF_ID!, // 請確認你的 .env.local 或環境變數已設定此值
       withLoginOnExternalBrowser: true, // 在外部瀏覽器中也要求登入
     })
-    .then(async () => {
-      toast.success('LIFF 初始化成功');
-      if (liff.isLoggedIn()) {
-        toast.success('已登入 LINE');
-        try {
-          const profile = await liff.getProfile();
-          toast.info(`你好，${profile.displayName}`);
-          setUserId(profile.userId); // 儲存 userId
-        } catch (error) {
-          console.error("取得使用者資料失敗: ", error);
-          toast.error('取得使用者資料失敗，請檢查控制台錯誤訊息');
+      .then(async () => {
+        if (liff.isLoggedIn()) {
+          try {
+            const profile = await liff.getProfile();
+            toast.info(`已登入,你好，${profile.displayName}`);
+            setUserId(profile.userId);
+          } catch (error) {
+            console.error("取得使用者資料失敗: ", error);
+            toast.error('取得使用者資料失敗，請檢查控制台錯誤訊息');
+          }
+        } else {
+          toast.warning('尚未登入 LINE');
+          if (!liff.isInClient()) { // 只在外部瀏覽器中嘗試自動登入
+            liff.login({ redirectUri: window.location.href }); // 登入後導回目前頁面
+          }
         }
-      } else {
-        toast.warning('尚未登入 LINE');
-        if (!liff.isInClient()) { // 只在外部瀏覽器中嘗試自動登入
-          liff.login({ redirectUri: window.location.href }); // 登入後導回目前頁面
-        }
-      }
-    })
-    .catch((error) => {
-      console.error("LIFF 初始化失敗: ", error);
-      toast.error('LIFF 初始化失敗，請檢查 LIFF ID 或網路連線');
-    });
-  }, []); // 空依賴陣列，確保只在組件掛載時執行一次
+      })
+      .catch((error) => {
+        console.error("LIFF 初始化失敗: ", error);
+        toast.error('LIFF 初始化失敗，請檢查 LIFF ID 或網路連線');
+      });
+  }, []);
 
 
   // formData 狀態似乎未使用於目前的班次預約邏輯中，先註解或移除
@@ -218,7 +216,7 @@ export default function BookingPage() {
                   if (typeof checked === "boolean") {
                     setBookNow(checked)
                     if (checked) { // 如果切換為現在預約，重置日期為今天
-                        setDate(new Date());
+                      setDate(new Date());
                     }
                   }
                 }}
