@@ -1,5 +1,6 @@
 "use client"
 
+import { toast } from "sonner";
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -13,71 +14,6 @@ import { CalendarIcon, Loader2 } from "lucide-react"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { counties, stationsByCounty, StationInfo } from "@/lib/locationData"
 
-
-// 模擬時刻表資料
-const mockTimetable = [
-  {
-    trainType: "區間車",
-    trainNumber: "1254",
-    destination: "花蓮",
-    departureTime: "14:25",
-    estimatedDepartureTime: "14:25",
-    platform: "1",
-    status: "準點",
-    canBook: true,
-  },
-  {
-    trainType: "自強號",
-    trainNumber: "402",
-    destination: "台東",
-    departureTime: "14:50",
-    estimatedDepartureTime: "14:55",
-    platform: "2",
-    status: "晚5分鐘",
-    canBook: false,
-  },
-  {
-    trainType: "區間車",
-    trainNumber: "1256",
-    destination: "台東",
-    departureTime: "15:10",
-    estimatedDepartureTime: "15:10",
-    platform: "1",
-    status: "準點",
-    canBook: true,
-  },
-  {
-    trainType: "莒光號",
-    trainNumber: "512",
-    destination: "高雄",
-    departureTime: "15:30",
-    estimatedDepartureTime: "15:30",
-    platform: "3",
-    status: "準點",
-    canBook: false,
-  },
-  {
-    trainType: "區間車",
-    trainNumber: "1258",
-    destination: "花蓮",
-    departureTime: "15:45",
-    estimatedDepartureTime: "15:45",
-    platform: "1",
-    status: "準點",
-    canBook: true,
-  },
-  {
-    trainType: "區間車",
-    trainNumber: "1260",
-    destination: "台東",
-    departureTime: "16:20",
-    estimatedDepartureTime: "16:20",
-    platform: "1",
-    status: "準點",
-    canBook: true,
-  },
-]
-
 export default function TimetablePage() {
   const [originCounty, setOriginCounty] = useState<string>("")
   const [originStation, setOriginStation] = useState<string>("")
@@ -87,18 +23,84 @@ export default function TimetablePage() {
   const [direction, setDirection] = useState<string>("all")
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [timetable, setTimetable] = useState<any[] | null>(null)
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [autoTime, setAutoTime] = useState<Date | undefined>(new Date())
 
-  const handleSearch = () => {
-    if (!originCounty || !originStation || !destCounty || !destStation) {
-      return
-    }
+  function getStationIDByName(county: string, name: string): string | undefined {
+    const stations = stationsByCounty[county];
+    if (!stations) return undefined;
 
+    const station = stations.find(s => s.name === name);
+    return station?.StationID;
+  }
+
+  const formatDate = (date?: Date): string => {
+    if (!date) return '';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // 月份是 0~11
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  const formatted = formatDate(autoTime);
+
+  const handleSearch = async () => {
     setIsLoading(true)
+    setSearchResults([]); // 開始查詢前先清空舊結果
 
-    // 模擬API請求
-    setTimeout(() => {
-      setIsLoading(false)
-    }, 1000)
+    console.log(getStationIDByName(originCounty, originStation))
+    console.log(getStationIDByName(destCounty, destStation))
+    console.log(formatted)
+    // API請求
+    try {
+      const response = await fetch("https://smart-train-backend.vercel.app/get_train_schedule", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          start: getStationIDByName(originCounty, originStation),
+          end: getStationIDByName(destCounty, destStation),
+          time: formatted,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("API 錯誤回應:", errorData);
+        throw new Error(errorData.detail || `查詢班次失敗: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      function extractSimplifiedTrainInfo(data: any) {
+        if (!Array.isArray(data) || data.length === 0) {
+          console.warn("提供的資料不是有效的陣列或陣列為空。");
+          return [];
+        }
+
+        return data.map(trainEntry => {
+          const arrivalTime = trainEntry?.DestinationStopTime?.ArrivalTime;
+          const endingStationName = trainEntry?.DailyTrainInfo?.EndingStationName?.Zh_tw;
+          const trainNo = trainEntry?.DailyTrainInfo?.TrainNo;
+
+          return {
+            arrivalTime: arrivalTime,
+            endingStationName: endingStationName,
+            trainNo: trainNo,
+          };
+        }).filter(entry => entry !== null); // 如果上面選擇回傳 null，則過濾掉
+      }
+
+      const simplifiedData = extractSimplifiedTrainInfo(data);
+      console.log("簡化後的列車資訊:", simplifiedData);
+      setSearchResults(simplifiedData);
+    } catch (error: any) {
+      console.error("查詢班次時發生錯誤:", error);
+      toast.error(`查詢失敗: ${error.message}`);
+      setSearchResults([]);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
