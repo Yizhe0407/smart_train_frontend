@@ -11,51 +11,8 @@ import { zhTW } from "date-fns/locale"
 import { Badge } from "@/components/ui/badge"
 import { CalendarIcon, Loader2 } from "lucide-react"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { counties, stationsByCounty } from "@/lib/locationData"
 
-// 模擬資料
-const counties = [
-  "基隆市",
-  "台北市",
-  "新北市",
-  "桃園市",
-  "新竹市",
-  "新竹縣",
-  "苗栗縣",
-  "台中市",
-  "彰化縣",
-  "南投縣",
-  "雲林縣",
-  "嘉義市",
-  "嘉義縣",
-  "台南市",
-  "高雄市",
-  "屏東縣",
-  "宜蘭縣",
-  "花蓮縣",
-  "台東縣",
-]
-
-const stationsByCounty: Record<string, Array<{ name: string; isSmall: boolean }>> = {
-  基隆市: [
-    { name: "基隆", isSmall: false },
-    { name: "三坑", isSmall: true },
-    { name: "八堵", isSmall: false },
-    { name: "七堵", isSmall: false },
-  ],
-  台北市: [
-    { name: "南港", isSmall: false },
-    { name: "松山", isSmall: false },
-    { name: "台北", isSmall: false },
-    { name: "萬華", isSmall: false },
-  ],
-  新北市: [
-    { name: "板橋", isSmall: false },
-    { name: "樹林", isSmall: false },
-    { name: "鶯歌", isSmall: false },
-    { name: "福隆", isSmall: true },
-  ],
-  // 其他縣市的車站...
-}
 
 // 模擬時刻表資料
 const mockTimetable = [
@@ -195,6 +152,7 @@ export default function TimetablePage() {
                 mode="single"
                 selected={date}
                 onSelect={setDate}
+                locale={zhTW} // <--- 在這裡加入 locale 屬性
                 disabled={(date) => {
                   const today = new Date()
                   const sevenDaysAgo = new Date()

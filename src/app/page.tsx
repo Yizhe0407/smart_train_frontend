@@ -20,52 +20,10 @@ import {
 } from "@/components/ui/dialog"
 import { useRouter } from "next/navigation"
 
-// 模擬資料
-const counties = [
-  "基隆市",
-  "台北市",
-  "新北市",
-  "桃園市",
-  "新竹市",
-  "新竹縣",
-  "苗栗縣",
-  "台中市",
-  "彰化縣",
-  "南投縣",
-  "雲林縣",
-  "嘉義市",
-  "嘉義縣",
-  "台南市",
-  "高雄市",
-  "屏東縣",
-  "宜蘭縣",
-  "花蓮縣",
-  "台東縣",
-]
+// 從 lib 匯入資料
+import { counties, stationsByCounty, StationInfo } from "@/lib/locationData" // 假設你的 tsconfig.json 有設定 @/ 指向 src/
 
-const stationsByCounty: Record<string, Array<{ name: string; isSmall: boolean }>> = {
-  基隆市: [
-    { name: "基隆", isSmall: false },
-    { name: "三坑", isSmall: true },
-    { name: "八堵", isSmall: false },
-    { name: "七堵", isSmall: false },
-  ],
-  台北市: [
-    { name: "南港", isSmall: false },
-    { name: "松山", isSmall: false },
-    { name: "台北", isSmall: false },
-    { name: "萬華", isSmall: false },
-  ],
-  新北市: [
-    { name: "板橋", isSmall: false },
-    { name: "樹林", isSmall: false },
-    { name: "鶯歌", isSmall: false },
-    { name: "福隆", isSmall: true },
-  ],
-  // 其他縣市的車站...
-}
-
-// 模擬班次資料
+// 模擬班次資料 (這個可以保留在組件內，或者如果需要在其他地方使用，也可以移到 lib)
 const mockTrains = [
   {
     trainNumber: "1254",
@@ -97,10 +55,10 @@ export default function BookingPage() {
   const [date, setDate] = useState<Date | undefined>(new Date())
   const [time, setTime] = useState<string>("12:00")
   const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [searchResults, setSearchResults] = useState<any[] | null>(null)
+  const [searchResults, setSearchResults] = useState<any[] | null>(null) // 可以考慮為 train 定義更精確的型別
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean
-    train: any | null
+    train: any | null // 同上
   }>({
     open: false,
     train: null,
@@ -147,6 +105,9 @@ export default function BookingPage() {
     }
   }
 
+  // 獲取選定縣市的車站列表，如果縣市未選或資料中不存在，則返回空陣列
+  const currentStations: StationInfo[] = county && stationsByCounty[county] ? stationsByCounty[county] : []
+
   return (
     <div className="container max-w-md mx-auto p-4">
       <Card className="mb-6">
@@ -155,7 +116,10 @@ export default function BookingPage() {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-1">縣市</label>
-              <Select value={county} onValueChange={setCounty}>
+              <Select value={county} onValueChange={(value) => {
+                setCounty(value)
+                setStation("") // 當縣市改變時，重置車站選擇
+              }}>
                 <SelectTrigger>
                   <SelectValue placeholder="請選擇縣市" />
                 </SelectTrigger>
@@ -171,13 +135,12 @@ export default function BookingPage() {
 
             <div>
               <label className="block text-sm font-medium mb-1">車站</label>
-              <Select value={station} onValueChange={setStation} disabled={!county}>
+              <Select value={station} onValueChange={setStation} disabled={!county || currentStations.length === 0}>
                 <SelectTrigger>
-                  <SelectValue placeholder="請選擇車站" />
+                  <SelectValue placeholder={!county ? "請先選擇縣市" : "請選擇車站"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {county &&
-                    stationsByCounty[county]?.map((s) => (
+                  {currentStations.map((s) => (
                       <SelectItem key={s.name} value={s.name}>
                         {s.name} {s.isSmall && <span className="text-xs text-muted-foreground">(小站)</span>}
                       </SelectItem>
@@ -222,8 +185,11 @@ export default function BookingPage() {
                         onSelect={setDate}
                         disabled={(date) => {
                           const today = new Date()
+                          // 將今天的時間設為 00:00:00 以便比較
+                          today.setHours(0,0,0,0)
                           const thirtyDaysLater = new Date()
-                          thirtyDaysLater.setDate(today.getDate() + 30)
+                          thirtyDaysLater.setDate(new Date().getDate() + 30)
+                          thirtyDaysLater.setHours(23,59,59,999) // 將30天後的日期時間設為當天結束
                           return date < today || date > thirtyDaysLater
                         }}
                       />
@@ -267,9 +233,9 @@ export default function BookingPage() {
           <div className="mt-8">
             <h2 className="text-lg font-semibold mb-4">可預約班次</h2>
             {
-              searchResults === null || searchResults === undefined ? ( // 檢查 searchResults 是否為 null 或 undefined
+              searchResults === null ? (
                 <p className="text-center text-muted-foreground py-8">等待查詢...</p>
-              ) : searchResults.length === 0 ? ( // 如果 searchResults 已定義，再檢查其長度
+              ) : searchResults.length === 0 ? (
                 <p className="text-center text-muted-foreground py-8">抱歉，該時段查無符合條件的可預約班次</p>
               ) : (
                 <div className="space-y-3">
@@ -319,7 +285,7 @@ export default function BookingPage() {
                     <strong>終點站:</strong> {confirmDialog.train.destination}
                   </p>
                   <p>
-                    <strong>停靠車站:</strong> {station}
+                    <strong>停靠車站:</strong> {station} ({county})
                   </p>
                 </div>
               )}
