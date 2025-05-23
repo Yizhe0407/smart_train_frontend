@@ -100,7 +100,7 @@ export default function BookingPage() {
     console.log(formatted)
     // API請求
     try {
-      const response = await fetch("https://smart-train-backend.onrender.com/get_train_schedule", {
+      const response = await fetch("/api/get_train_schedule", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
