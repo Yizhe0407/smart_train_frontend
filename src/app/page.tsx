@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { toast } from "sonner";
+import { useState, useEffect  } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -19,6 +20,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { useRouter } from "next/navigation"
+import liff from "@line/liff";
 
 // 從 lib 匯入資料
 import { counties, stationsByCounty, StationInfo } from "@/lib/locationData" // 假設你的 tsconfig.json 有設定 @/ 指向 src/
@@ -63,6 +65,25 @@ export default function BookingPage() {
     open: false,
     train: null,
   })
+
+  useEffect(() => {
+    liff.init({
+      liffId: process.env.NEXT_PUBLIC_LIFF_ID!, // Use own liffId
+      withLoginOnExternalBrowser: true, // Enable automatic login process
+    }).then(() => {
+      toast.success(liff.isLoggedIn() ? '已登入' : '未登入')
+    });
+  }, []);
+  
+  const [formData, setFormData] = useState({
+    name: "",
+    phone: "",
+    license: "",
+    selectedItems: [],
+    date: null,
+    selectedTime: null,
+    needPickup: false
+  });
 
   const handleSearch = () => {
     if (!county || !station) {
